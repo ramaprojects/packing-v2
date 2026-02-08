@@ -1,0 +1,230 @@
+:root {
+  --bg-page: #f7f7f7a0;
+  --bg-card: #ffffff;
+  --border-soft: #e6e6e6;
+  --text-main: #222;
+  --text-muted: #777;
+
+  --radius: 10px;
+  --gap-sm: 8px;
+  --gap-md: 12px;
+  --gap-lg: 16px;
+
+  --app-font: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  font-family: var(--app-font);
+  background-color: var(--bg-page);
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 700;
+}
+
+.btn-primary {
+  --bs-btn-bg: #166d6e;
+  --bs-btn-border-color: #166d6e;
+  --bs-btn-hover-bg: #1c8485;
+  --bs-btn-hover-border-color: #1c8485;
+  --bs-btn-active-bg: #0f4f50;
+  --bs-btn-active-border-color: #0f4f50;
+  --bs-btn-disabled-bg: #82a7a7;
+  --bs-btn-disabled-border-color: #82a7a7;
+}
+
+
+.bottom-nav .nav-item span {
+  font-weight: 600; /* semi-bold */
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+
+  height: 64px;
+  background: #fff;
+  border-top: 1px solid #eee;
+  z-index: 1000;
+}
+
+.bottom-nav .nav-item {
+  background: none;
+  border: none;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  font-size: 12px;
+  color: #bdbdbd;
+
+  cursor: pointer;
+}
+
+.bottom-nav .nav-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.bottom-nav .nav-item.active {
+  color: #155d5e;
+}
+
+.bottom-nav .nav-item:focus {
+  outline: none;
+}
+
+#resi-badge-nav {
+    font-size: 0.65rem;
+    padding: 0.25em 0.45em;
+    transform: translate(50%, -50%);
+}
+
+#checklistContainer {
+  padding: var(--gap-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: var(--gap-md);
+  display: flex;
+  justify-content: space-between;
+}
+
+#header-checklist {
+  display: flex;
+  width: 100%;
+}
+
+.header-checklist-left {
+  display: flex;
+  width: 100%;
+  left: 20px;
+  justify-content: space-around;
+}
+
+#header-nav {
+  display: flex;
+  width: 100%;
+  gap: 40px;  
+}
+
+.card .item-text {
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.card.checked {
+  opacity: 0.55;
+}
+
+.card.checked .item-text {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.card {
+  transition: background 0.15s ease;
+}
+
+/* .card:active {
+  background: #f0f0f0;
+} */
+
+.empty-checklist {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 24px 12px;
+}
+
+#checklist-footer {
+  margin-bottom: 80px;
+}
+
+.finish-wrapper {
+  padding: var(--gap-md);
+}
+
+#btnFinish {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius);
+  border: none;
+
+  background: #111;
+  color: #fff;
+
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+
+  cursor: pointer;
+}
+
+#btnFinish:disabled {
+  background: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+#btnFinish:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.finish-wrapper {
+  margin-top: var(--gap-lg);
+}
+
+.finish-wrapper {
+  position: sticky;
+  bottom: 16px;
+  background: var(--bg-page);
+}
+
+.historyPage-action {
+  margin: 30px;
+}
+
+
+
+.history-card {
+  border-radius: 14px;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+.card-body {
+  padding: 0.3em;
+}
+
+.card-body .btn-resi-action {
+  width: 100px;
+}
+
+.btn-back-resi {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1050;
+}
