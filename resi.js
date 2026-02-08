@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     inputUploadResi.click();
   });
 
-  
+
   inputUploadResi.addEventListener('change', e => {
     const file = e.target.files[0];
     resiPhotoFile = file || null;
@@ -163,55 +163,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const all = loadAllSessions();
     const idx = all.findIndex(s => s.sessionId === session.sessionId);
-    if (idx < 0) return;
+    if (idx >= 0) {
+        all[idx] = session;
+        all[idx].status = 'finished';
+        all[idx].finishedAt = Date.now();
+        saveAllSessions(all);
+    }
 
-    all[idx] = session;
-    all[idx].status = 'finished';
-    all[idx].finishedAt = Date.now();
-
-    saveAllSessions(all);
     clearCurrentSession();
+    showLoading();
 
-    // Redirect langsung (UX cepat)
+    // update UI cepat
     panelEl.classList.add('d-none');
     summaryEl.classList.remove('d-none');
     renderQueue();
     updateResiBadge();
 
-    showLoading();
-    // Upload foto DI BELAKANG (tidak blocking)
+    // upload foto dan tunggu sampai selesai
     if (resiPhotoFile) {
-      uploadPhoto({
-        sessionId: session.sessionId,
-        type: 'resi',
-        resiNumber,
-        file: resiPhotoFile
-      })
-        .then(({ photoUrl }) => {
-          // update session history
-          const all = loadAllSessions();
-          const idx = all.findIndex(s => s.sessionId === session.sessionId);
-          if (idx >= 0) {
-            all[idx].resi.photoUrl = photoUrl;
-            all[idx].status = 'finished';
-            saveAllSessions(all);
-          }
-        })
-        .catch(err => {
-          console.error('Upload resi async gagal', err);
-          // session tetap valid, hanya foto yang pending
-        })
-        .finally(() => {
-          // REDIRECT TERAKHIR
-          // window.location.href = 'history.html';
-        });
-    } else {
-      window.location.href = 'history.html';
-    }
-    await new Promise(r => setTimeout(r, 4000));
-    hideLoading();
+        try {
+            const { photoUrl } = await uploadPhoto({
+                sessionId: session.sessionId,
+                type: 'resi',
+                resiNumber,
+                file: resiPhotoFile
+            });
 
-  });
+            // update session history
+            const allSessions = loadAllSessions();
+            const idx2 = allSessions.findIndex(s => s.sessionId === session.sessionId);
+            if (idx2 >= 0) {
+                allSessions[idx2].resi.photoUrl = photoUrl;
+                allSessions[idx2].status = 'finished';
+                saveAllSessions(allSessions);
+            }
+        } catch (err) {
+            console.error('Upload resi gagal', err);
+            // session tetap valid, hanya foto yang pending
+        }
+    }
+
+    // setelah upload selesai baru hide spinner & redirect
+    hideLoading();
+    window.location.href = 'history.html';
+});
+
 
 
   function showLoading() {

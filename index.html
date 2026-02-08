@@ -14,7 +14,16 @@
 </head>
 
 <body class="bg-light page-checklist">
-
+    <!-- overlay loading -->
+    <div id="loading-overlay"
+        class="d-none position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex justify-content-center align-items-center"
+        style="z-index: 1050;">
+        <div class="d-flex flex-column justify-content-center align-items-center">
+            <div class="spinner-border text-dark" role="status"></div>
+            <span class="mt-2">Mohon ditunggu ngge...</span>
+        </div>
+    </div>
+    
     <!-- HEADER -->
     <header class="d-flex sticky-top bg-white border-bottom p-3">
         <div id="header-default">
@@ -149,6 +158,8 @@
             </div>
         </div>
     </div>
+
+
 
     <nav class="fixed-bottom bg-white border-top">
         <div class="d-flex bottom-nav justify-content-around py-2">

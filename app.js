@@ -448,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const idx = Number(e.target.dataset.index);
         const file = e.target.files[0];
         if (!file) return;
-        
+
         updateSession(s => {
             if (s.checklist[idx].photoId) return;
             s.checklist[idx].photoFile = file;
@@ -525,9 +525,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== FINISH =====
     btnFinish?.addEventListener('click', () => {
+        showLoading();
         finishChecklist();
-        setTimeout(() => window.location.href = 'resi.html', 50);
+
+        setTimeout(() => {
+            hideLoading();
+            window.location.href = 'resi.html';
+        }, 3000);
     });
+
+    function showLoading() {
+        document.getElementById('loading-overlay').classList.remove('d-none');
+    }
+
+    function hideLoading() {
+        document.getElementById('loading-overlay').classList.add('d-none');
+    }
 
     // ===== CANCEL =====
     btnBack?.addEventListener('click', () => {
