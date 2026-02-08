@@ -139,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     inputUploadResi.click();
   });
 
+  
   inputUploadResi.addEventListener('change', e => {
     const file = e.target.files[0];
     resiPhotoFile = file || null;
@@ -202,14 +203,14 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .finally(() => {
           // REDIRECT TERAKHIR
-          window.location.href = 'history.html';
+          // window.location.href = 'history.html';
         });
     } else {
       window.location.href = 'history.html';
     }
     await new Promise(r => setTimeout(r, 4000));
     hideLoading();
-    window.location.href = 'history.html';
+
   });
 
 

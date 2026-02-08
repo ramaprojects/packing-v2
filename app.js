@@ -552,6 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateProgressUI();
         validateFinish();
     }
+
 });
 
 
@@ -575,6 +576,7 @@ async function uploadPhoto({ sessionId, type, item, resiNumber, file }) {
     const photoUrl = await res.text();
     return { photoUrl };
 }
+
 
 function fileToBase64(file) {
     return new Promise(resolve => {
