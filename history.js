@@ -140,7 +140,7 @@ function renderDetail(s) {
       <!-- PHOTO -->
       <div class="mt-3">
         ${s.resi?.photo
-      ? `<img src="${s.resi.photo}" class="img-fluid rounded">`
+      ? `<img src="${s.resi.photoUrl}" class="img-fluid rounded">`
       : `<p class="text-muted text-center">Tidak ada foto resi</p>`
     }
       </div>
