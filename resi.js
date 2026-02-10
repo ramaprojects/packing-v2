@@ -1,228 +1,187 @@
+// GANTI SELURUH ISI FILE resi.js DENGAN KODE INI
+
 document.addEventListener('DOMContentLoaded', () => {
-  const summaryEl = document.getElementById('resi-summary');
-  const panelEl = document.getElementById('resi-panel');
-  const titleEl = document.getElementById('resi-title');
-  const inputResi = document.getElementById('input-resi-number');
-  const btnFinish = document.getElementById('btn-finish-resi');
-  const btnBack = document.getElementById('btn-back-resi');
-  const btnUploadResi = document.getElementById('btn-upload-resi');
-  const inputUploadResi = document.getElementById('input-upload-resi');
+    // === DOM REFERENCES ===
+    const summaryEl = document.getElementById('resi-summary');
+    const panelEl = document.getElementById('resi-panel');
+    const overlayEl = document.getElementById('resi-panel-overlay');
+    const titleEl = document.getElementById('resi-title');
+    const shippingSummaryEl = document.getElementById('resi-shipping-summary');
+    const photoPreviewEl = document.getElementById('resi-photo-preview');
+    
+    const inputResi = document.getElementById('input-resi-number');
+    const btnFinish = document.getElementById('btn-finish-resi');
+    const btnClosePanel = document.getElementById('btn-close-panel');
+    const btnUploadResi = document.getElementById('btn-upload-resi');
+    const inputUploadResi = document.getElementById('input-upload-resi');
 
-  btnBack?.addEventListener('click', () => {
-    clearCurrentSession();
+    let currentSessionId = null;
+    let resiPhotoFile = null;
 
-    panelEl.classList.add('d-none');
-    summaryEl.classList.remove('d-none');
-
-    inputResi.value = '';
-    btnFinish.disabled = true;
-  });
-
-  /* ===============================
-     1. LOAD QUEUE
-  =============================== */
-  function getQueue() {
-    return loadAllSessions().filter(
-      s => s.status === 'CHECKLIST_DONE'
-    );
-  }
-
-  /* ===============================
-     2. RENDER QUEUE
-  =============================== */
-  function renderQueue() {
-    const queue = getQueue();
-    summaryEl.innerHTML = '';
-
-    if (!queue.length) {
-      summaryEl.innerHTML =
-        `<div class="text-muted">Belum ada checklist</div>`;
-      return;
+    // === FUNGSI KONTROL PANEL (MODAL) ===
+    function showResiPanel() {
+        panelEl.classList.add('show');
+        overlayEl.classList.remove('d-none');
+        overlayEl.classList.add('show');
+        document.body.style.overflow = 'hidden';
     }
 
-    queue.forEach(session => {
-      const card = document.createElement('div');
-      card.className = 'card mb-2';
-      card.className = 'card shadow-sm';
-      card.style.borderRadius = '14px';
+    function hideResiPanel() {
+        panelEl.classList.remove('show');
+        overlayEl.classList.remove('show');
+        setTimeout(() => {
+            overlayEl.classList.add('d-none');
+        }, 300);
+        document.body.style.overflow = 'auto';
+        
+        // Reset state
+        currentSessionId = null;
+        resiPhotoFile = null;
+        inputResi.value = '';
+        inputUploadResi.value = '';
+        photoPreviewEl.classList.add('d-none');
+        photoPreviewEl.src = '#';
+    }
 
-      card.innerHTML = `
-  <div class="card-body">
+    btnClosePanel?.addEventListener('click', hideResiPanel);
+    overlayEl?.addEventListener('click', hideResiPanel);
 
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <strong>${session.shipping.jenis} - ${session.shipping.penerima}</strong>
-      <span class="badge bg-danger-subtle text-danger">
-        ${getStatusLabel(session.status)}
-      </span>
-    </div>
+    // === RENDER QUEUE ===
+    function getQueue() {
+        return loadAllSessions().filter(s => s.status === 'CHECKLIST_DONE');
+    }
 
-    <!-- Content -->
-    <div class="row small text-muted mb-3">
-      <div class="col-4">
-        <div>PIC Packing</div>
-        <div class="text-dark fw-medium">${session.operator || '-'}</div>
-      </div>
-
-      <div class="col-4">
-      <div>Packing ID</div>
-      <div class="text-dark">${session.sessionId.slice(-8)}</div>
-      </div>
-
-      <div class="col-4">
-        <div>Tanggal</div>
-        <div class="text-dark">${formatDate(session.createdAt)}</div>
-      </div>
-    </div>
-
-    <!-- Action -->
-    <div class="d-flex justify-content-end">
-      <button
-        class="btn btn-sm btn-primary btn-resi-action"
-        data-session-id="${session.sessionId}">
-        Input Resi
-      </button>
-    </div>
-
-  </div>
-`;
-
-
-      card
-        .querySelector('button')
-        .addEventListener('click', () => {
-          openResiPanel(session.sessionId);
+    function renderQueue() {
+        // ... (Fungsi ini tetap sama seperti jawaban sebelumnya, tidak perlu diubah)
+        const queue = getQueue();
+        summaryEl.innerHTML = '';
+        if (!queue.length) {
+            summaryEl.innerHTML = `<div class="text-center text-muted p-5">Belum ada antrian untuk diisi resi.</div>`;
+            return;
+        }
+        queue.forEach(session => {
+            const card = document.createElement('div');
+            card.className = 'card shadow-sm';
+            card.innerHTML = `
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong>${session.shipping.jenis} - ${session.shipping.penerima}</strong>
+                        <span class="badge ${getStatusBadgeDetails(session.status).className}">${getStatusBadgeDetails(session.status).label}</span>
+                    </div>
+                    <div class="row small text-muted mb-3">
+                        <div class="col-4"><div>PIC Packing</div><div class="text-dark fw-medium">${session.operator || '-'}</div></div>
+                        <div class="col-4"><div>Packing ID</div><div class="text-dark">${session.sessionId.slice(-8)}</div></div>
+                        <div class="col-4"><div>Tanggal</div><div class="text-dark">${formatDate(session.createdAt)}</div></div>
+                    </div>
+                    <div class="d-grid"><button class="btn btn-primary btn-resi-action" data-session-id="${session.sessionId}">Input Resi</button></div>
+                </div>
+            `;
+            summaryEl.appendChild(card);
         });
-
-      summaryEl.appendChild(card);
-    });
-  }
-
-  /* ===============================
-     3. OPEN PANEL
-  =============================== */
-  function openResiPanel(sessionId) {
-    const all = loadAllSessions();
-    const session = all.find(s => s.sessionId === sessionId);
-    if (!session) return;
-
-    saveCurrentSession(session);
-
-    summaryEl.classList.add('d-none');
-    panelEl.classList.remove('d-none');
-
-    titleEl.textContent =
-      `${session.shipping.penerima} - ${session.shipping.jenis}`;
-
-    inputResi.value = '';
-    btnFinish.disabled = true;
-  }
-
-  /* ===============================
-     4. VALIDATION
-  =============================== */
-
-  function updateFinishButton() {
-    const hasResi = inputResi.value.trim() !== '';
-    const hasPhoto = !!resiPhotoFile;
-
-    btnFinish.disabled = !(hasResi && hasPhoto);
-  }
-
-  inputResi.addEventListener('input', () => {
-    updateFinishButton();
-  });
-
-  let resiPhotoFile = null;
-
-  btnUploadResi.addEventListener('click', () => {
-    inputUploadResi.click();
-  });
-
-
-  inputUploadResi.addEventListener('change', e => {
-    const file = e.target.files[0];
-    resiPhotoFile = file || null;
-
-    updateFinishButton();
-  });
-
-  /* ===============================
-     5. FINISH RESI
-  =============================== */
-  btnFinish.addEventListener('click', async () => {
-    const session = loadCurrentSession();
-    if (!session) return;
-
-    const resiNumber = inputResi.value.trim();
-    if (!resiNumber) return;
-
-    session.resi.number = resiNumber;
-    session.status = 'RESI_DONE';
-    session.updatedAt = now();
-
-    const all = loadAllSessions();
-    const idx = all.findIndex(s => s.sessionId === session.sessionId);
-    if (idx >= 0) {
-        all[idx] = session;
-        all[idx].status = 'finished';
-        all[idx].finishedAt = Date.now();
-        saveAllSessions(all);
     }
 
-    clearCurrentSession();
-    showLoading();
+    // === BUKA PANEL ===
+    summaryEl.addEventListener('click', (e) => {
+        // ... (Fungsi ini tetap sama, tidak perlu diubah)
+        const actionButton = e.target.closest('.btn-resi-action');
+        if (!actionButton) return;
+        currentSessionId = actionButton.dataset.sessionId;
+        const session = getQueue().find(s => s.sessionId === currentSessionId);
+        if (!session) return;
+        titleEl.textContent = `Input Resi untuk ${session.shipping.penerima}`;
+        shippingSummaryEl.innerHTML = `<strong>${session.shipping.platform}</strong> - ${session.shipping.jenis}<div class="small text-muted">Oleh: ${session.operator}</div>`;
+        updateFinishButton();
+        showResiPanel();
+    });
 
-    // update UI cepat
-    panelEl.classList.add('d-none');
-    summaryEl.classList.remove('d-none');
+    // === VALIDATION ===
+    function updateFinishButton() {
+        const hasResi = inputResi.value.trim() !== '';
+        const hasPhoto = !!resiPhotoFile;
+        btnFinish.disabled = !(hasResi && hasPhoto);
+    }
+    inputResi.addEventListener('input', updateFinishButton);
+    btnUploadResi.addEventListener('click', () => inputUploadResi.click());
+    inputUploadResi.addEventListener('change', e => {
+        // ... (Fungsi ini tetap sama, tidak perlu diubah)
+        const file = e.target.files[0];
+        if (!file) return;
+        resiPhotoFile = file;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            photoPreviewEl.src = event.target.result;
+            photoPreviewEl.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+        updateFinishButton();
+    });
+
+    /* ===============================
+       4. FINISH RESI (DENGAN PERBAIKAN)
+    =============================== */
+    btnFinish.addEventListener('click', async () => {
+        if (!currentSessionId) return;
+
+        // --- PERBAIKAN DIMULAI DI SINI ---
+        // 1. Amankan referensi file dan data PENTING lainnya SEKARANG,
+        //    sebelum `hideResiPanel` membersihkannya.
+        const fileToUpload = resiPhotoFile;
+        const sessionIdToUpdate = currentSessionId;
+        const resiNumber = inputResi.value.trim();
+        // --- AKHIR PERBAIKAN BAGIAN 1 ---
+
+        showLoading();
+        hideResiPanel(); // Sekarang aman memanggil ini
+
+        const all = loadAllSessions();
+        const sessionIndex = all.findIndex(s => s.sessionId === sessionIdToUpdate);
+        if (sessionIndex < 0) {
+            hideLoading();
+            return;
+        }
+
+        // Update data sesi
+        all[sessionIndex].resi.number = resiNumber;
+        all[sessionIndex].status = 'finished';
+        all[sessionIndex].finishedAt = new Date().toISOString();
+        saveAllSessions(all);
+
+        // --- PERBAIKAN BAGIAN 2 ---
+        // 2. Gunakan variabel lokal 'fileToUpload' untuk pengecekan dan upload
+        if (fileToUpload) {
+            try {
+                const { photoUrl } = await uploadPhoto({
+                    sessionId: sessionIdToUpdate,
+                    type: 'resi',
+                    resiNumber,
+                    file: fileToUpload // Gunakan file yang sudah diamankan
+                });
+
+                const currentSessions = loadAllSessions();
+                const finalIndex = currentSessions.findIndex(s => s.sessionId === sessionIdToUpdate);
+                if (finalIndex >= 0) {
+                    currentSessions[finalIndex].resi.photoUrl = photoUrl;
+                    saveAllSessions(currentSessions);
+                }
+            } catch (err) {
+                console.error('Upload foto resi gagal:', err);
+                alert('Gagal mengunggah foto resi, namun data nomor resi sudah tersimpan.');
+            }
+        }
+        // --- AKHIR PERBAIKAN BAGIAN 2 ---
+        
+        hideLoading();
+        renderQueue();
+        updateResiBadge();
+        updateResiNavBadge();
+    });
+
+    // ... (Fungsi showLoading dan hideLoading tetap sama) ...
+    function showLoading() { document.getElementById('loading-overlay')?.classList.remove('d-none'); }
+    function hideLoading() { document.getElementById('loading-overlay')?.classList.add('d-none'); }
+    
+    // === INIT ===
     renderQueue();
     updateResiBadge();
-
-    // upload foto dan tunggu sampai selesai
-    if (resiPhotoFile) {
-        try {
-            const { photoUrl } = await uploadPhoto({
-                sessionId: session.sessionId,
-                type: 'resi',
-                resiNumber,
-                file: resiPhotoFile
-            });
-
-            // update session history
-            const allSessions = loadAllSessions();
-            const idx2 = allSessions.findIndex(s => s.sessionId === session.sessionId);
-            if (idx2 >= 0) {
-                allSessions[idx2].resi.photoUrl = photoUrl;
-                allSessions[idx2].status = 'finished';
-                saveAllSessions(allSessions);
-            }
-        } catch (err) {
-            console.error('Upload resi gagal', err);
-            // session tetap valid, hanya foto yang pending
-        }
-    }
-
-    // setelah upload selesai baru hide spinner & redirect
-    hideLoading();
-    window.location.href = 'history.html';
+    updateResiNavBadge();
 });
-
-
-
-  function showLoading() {
-    document.getElementById('loading-overlay').classList.remove('d-none');
-  }
-
-  function hideLoading() {
-    document.getElementById('loading-overlay').classList.add('d-none');
-  }
-
-  /* ===============================
-     INIT
-  =============================== */
-  renderQueue();
-  updateResiBadge();
-  updateResiNavBadge();
-});
-

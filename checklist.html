@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Packing Checklist</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+
+<body class="bg-light page-checklist">
+    <!-- overlay loading -->
+    <div id="loading-overlay"
+        class="d-none position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex justify-content-center align-items-center"
+        style="z-index: 1050;">
+        <div class="d-flex flex-column justify-content-center align-items-center">
+            <div class="spinner-border text-dark" role="status"></div>
+            <span class="mt-2">Mohon ditunggu ngge...</span>
+        </div>
+    </div>
+    
+    <!-- HEADER -->
+    <header class="d-flex sticky-top bg-white border-bottom p-3">
+        <div id="header-default">
+            <h6 class="mb-0 mt-2">Packing Checklist</h6>
+        </div>
+
+        <!-- HEADER FASE 2 (hidden by default) -->
+        <div id="header-checklist" class="d-none">
+            <div class="header-checklist-left mt-2">
+                <button id="btn-back-checklist" class="btn btn-sm btn-outline-secondary px-2">
+                    ←
+                </button>
+                <div class="header-nav">
+
+                    <span class="fw-semibold">T1 Packing</span>
+                </div>
+
+                <small id="header-checklist-small" class="text-muted ms-1">Rama • Tokopedia</small>
+            </div>
+            <div class="progress mt-2" style="height: 6px;">
+                <div id="checklist-progress" class="progress-bar" style="width: 0%"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="container-fluid py-3">
+
+        <!-- ========================= -->
+        <!-- FASE 1 : INPUT DATA -->
+        <!-- ========================= -->
+        <section id="phase-input" class=" shadow-sm">
+
+            <!-- <div class="mb-3">
+                <label class="form-label">Nama Petugas</label>
+                <input type="text" class="form-control" id="input-petugas" />
+            </div> -->
+
+            <div class="mb-3">
+                <label class="form-label">PIC Packing</label>
+                <select class="form-select" id="operatorName">
+                    <option value="">sp nama lu</option>
+                    <option value="ram">ram</option>
+                    <option value="nab">nab</option>
+                    <option value="wul">wul</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Nama User</label>
+                <input type="text" placeholder="Contoh: rama cell" class="form-control" id="input-penerima" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Platform Pembelian</label>
+                <select class="form-select" id="input-platform">
+                    <option value="">Pilih platform</option>
+                    <option>Aplikasi</option>
+                    <option>TikTok</option>
+                    <option>Shopee</option>
+                    <option>Retur</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Jenis Barang</label>
+                <select class="form-select" id="input-jenis">
+                    <option value="">Pilih jenis</option>
+                    <option value="T1">T1 Plus</option>
+                    <option value="T3">T3</option>
+                    <option value="M3">M3BT</option>
+                    <option value="ARRANET">Retur Arranet</option>
+                    <option value="USER">Retur User</option>
+                    <option value="ARAHNETS">Retur Arahnets</option>
+                    <option value="Thermal">Thermal Paper</option>
+                    <option value="Kaos">Kaos</option>
+                </select>
+            </div>
+
+            <button id="btn-start-checklist" class="btn btn-primary w-100" disabled>
+                Lanjut ke Checklist
+            </button>
+
+        </section>
+        <!-- ========================= -->
+        <!-- FASE 2 : CHECKLIST -->
+        <!-- ========================= -->
+        <section id="phase-checklist" class="d-none">
+
+            <!-- Data pengiriman (read-only) -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div id="summary-shipping" class="d-flex justify-content-around text-muted">
+                        <!-- Rama • Andi • Tokopedia • T1 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checklist items -->
+            <div id="checklist-container">
+                <!-- checklist card items injected by JS -->
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER CTA -->
+    <footer class="bg-white border-top p-3 d-none" id="checklist-footer">
+        <button id="btn-finish-checklist" class="btn btn-primary w-100">
+            Submit
+        </button>
+    </footer>
+
+    <!-- MODAL -->
+    <div class="modal fade" id="cancelModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <p class="mb-3">
+                        Checklist belum selesai.<br>
+                        Batalkan dan kembali ke input?
+                    </p>
+
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary w-50" data-bs-dismiss="modal">
+                            Tidak
+                        </button>
+                        <button id="confirm-cancel" class="btn btn-danger w-50">
+                            Ya, Batalkan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <nav class="fixed-bottom bg-white border-top">
+        <div class="d-flex bottom-nav justify-content-around py-2">
+        <button class="nav-item" data-nav="dashboard"><i class="nav-icon bi bi-house-door"></i><span>Dashboard</span></button>
+        <button class="nav-item active" data-nav="checklist"><i class="nav-icon bi bi-list-check"></i><span>Checklist</span></button>
+        <button class="nav-item position-relative" data-nav="resi"><i class="nav-icon bi bi-truck"></i><span>Resi</span><span id="resi-badge-nav" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">!</span></button>
+        <button class="nav-item" data-nav="history"><i class="nav-icon bi bi-clock-history"></i><span>History</span></button>
+        </div>
+    </nav>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- App Scripts -->
+    <script src="app.js"></script>
+</body>
+
+</html>

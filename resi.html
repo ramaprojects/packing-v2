@@ -19,41 +19,47 @@
     </header>
 
     <main class="container-fluid py-3 mb-4">
-
         <!-- QUEUE -->
         <div id="resi-summary" class="d-flex flex-column gap-2"></div>
+    </main>
 
+    <!-- 1. Overlay Gelap untuk Latar Belakang Modal -->
+    <div id="resi-panel-overlay" class="d-none"></div>
 
-        <!-- PANEL INPUT -->
-        <div id="resi-panel" class=" card d-none">
-            <header class="d-flex bg-white align-items-center p-3">
-                <button id="btn-back-resi" class="btn btn-light me-2">
-                    ←
-                </button>
-                <h6 id="resi-title"></h6>
-            </header>
-
-            <div class="card">
-                <input id="input-resi-number" class="form-control mb-2" placeholder="Nomor Resi" />
-
-                <div class="d-flex gap-2 mt-2 mb-2">
-                    <button id="btn-scan-resi" class="btn btn-outline-secondary w-50">
-                        Scan Resi
-                    </button>
-
-                    <input type="file" id="input-upload-resi" accept="image/*" capture="environment" class="d-none" />
-                    <button id="btn-upload-resi" class="btn btn-outline-secondary w-50">
-                        Upload Foto Resi
-                    </button>
-                </div>
-
-                <button id="btn-finish-resi" class="btn btn-primary w-100" disabled>
-                    Finish Packing
-                </button>
+    <!-- 2. Panel Input Resi (Modal Bottom Sheet) -->
+    <div id="resi-panel" class="resi-panel-container">
+        <div class="resi-panel-header">
+            <h6 id="resi-title" class="mb-0">Input Resi</h6>
+            <button id="btn-close-panel" class="btn-close"></button>
+        </div>
+        <div class="resi-panel-body">
+            <div id="resi-shipping-summary" class="mb-3">
+                <!-- Info penerima akan dimuat di sini -->
             </div>
 
+            <input id="input-resi-number" class="form-control mb-2" placeholder="Ketik atau Scan Nomor Resi" />
+
+            <!-- Pratinjau Foto Resi -->
+            <img id="resi-photo-preview" class="img-fluid rounded my-2 d-none" src="#" alt="Pratinjau Foto Resi" />
+
+            <div class="d-flex gap-2 mt-2 mb-3">
+                <button id="btn-scan-resi" class="btn btn-outline-secondary w-50">
+                    <i class="bi bi-qr-code-scan me-1"></i> Scan
+                </button>
+                <input type="file" id="input-upload-resi" accept="image/*" capture="environment" class="d-none" />
+                <button id="btn-upload-resi" class="btn btn-outline-secondary w-50">
+                    <i class="bi bi-camera-fill me-1"></i> Upload
+                </button>
+            </div>
+            <div class="d-grid">
+                <button id="btn-finish-resi" class="btn btn-primary" disabled>
+                    Simpan dan Selesaikan
+                </button>
+            </div>
         </div>
-    </main>
+    </div>
+    <!-- === AKHIR PERUBAHAN === -->
+
 
     <div id="scanner-container" style="display:none; position:fixed; inset:0; background:#000; z-index:1100;">
         <div id="scanner" style="width:100%; height:100%;"></div>
@@ -66,30 +72,18 @@
 
     <nav class="fixed-bottom bg-white border-top">
         <div class="d-flex bottom-nav justify-content-around py-2">
-
-            <button class="nav-item" data-nav="checklist">
-                <i class="nav-icon bi bi-list-check"></i>
-                <span>Checklist</span>
-
-            </button>
-
-
-            <button class="nav-item active position-relative" data-nav="resi">
-                <i class="nav-icon bi bi-truck"></i>
-                <span>Resi</span>
-                <span id="resi-badge-nav"
-                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    99+
-                </span>
-            </button>
-
-            <button class="nav-item" data-nav="history">
-                <i class="nav-icon bi bi-clock-history"></i>
-                <strong>History</strong>
-            </button>
-
+            <button class="nav-item" data-nav="dashboard"><i
+                    class="nav-icon bi bi-house-door"></i><span>Dashboard</span></button>
+            <button class="nav-item" data-nav="checklist"><i
+                    class="nav-icon bi bi-list-check"></i><span>Checklist</span></button>
+            <button class="nav-item active position-relative" data-nav="resi"><i
+                    class="nav-icon bi bi-truck"></i><span>Resi</span><span id="resi-badge-nav"
+                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">!</span></button>
+            <button class="nav-item" data-nav="history"><i
+                    class="nav-icon bi bi-clock-history"></i><span>History</span></button>
         </div>
     </nav>
+
 
     <!-- overlay loading -->
     <div id="loading-overlay"
@@ -97,7 +91,7 @@
         style="z-index: 1050;">
         <div class="d-flex flex-column justify-content-center align-items-center">
             <div class="spinner-border text-dark" role="status"></div>
-            <span class="mt-2">Mohon ditunggu ngge...</span>
+            <span class="mt-2">Mohon ditunggu ya...</span>
         </div>
     </div>
 

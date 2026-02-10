@@ -3,6 +3,7 @@
  *********************************/
 const STORAGE_KEY = 'packing_sessions';
 const CURRENT_SESSION_KEY = 'current_session';
+const LAST_OPERATOR_KEY = 'last_operator_name';
 let currentSessionId = null;
 let isFinishingProcess = false;
 let fileBuffer = {};
@@ -42,6 +43,35 @@ function formatDateTime(isoString) {
         hour: '2-digit',
         minute: '2-digit'
     });
+}
+
+function getStatusBadgeDetails(status) {
+    const MAP = {
+        DRAFT: {
+            label: 'Draft',
+            className: 'bg-secondary-subtle text-secondary'
+        },
+        CHECKLIST_DONE: {
+            label: 'Belum Ada Resi',
+            className: 'bg-danger-subtle text-danger' // Merah: butuh tindakan
+        },
+        finished: {
+            label: 'Resi Terisi',
+            className: 'bg-primary-subtle text-primary' // Biru: proses berjalan
+        },
+        SYNCED: {
+            label: 'Terkirim',
+            className: 'bg-success-subtle text-success' // Hijau: selesai
+        }
+    };
+
+    // Default jika status tidak dikenali
+    const defaultDetails = {
+        label: status,
+        className: 'bg-light text-dark'
+    };
+
+    return MAP[status] || defaultDetails;
 }
 
 async function compressImage(file, maxWidth = 1280, quality = 0.7) {
@@ -116,7 +146,8 @@ document.addEventListener('click', (e) => {
 
     const target = btn.dataset.nav;
 
-    if (target === 'checklist') { window.location.href = 'index.html'; }
+    if (target === 'dashboard') { window.location.href = 'index.html'; }
+    if (target === 'checklist') { window.location.href = 'checklist.html'; }
     if (target === 'resi') { window.location.href = 'resi.html'; }
     if (target === 'history') { window.location.href = 'history.html'; }
 });
@@ -162,14 +193,7 @@ function createNewSession(shipping) {
 }
 
 function getStatusLabel(status) {
-    const map = {
-        DRAFT: 'Draft',
-        CHECKLIST_DONE: 'Belum ada resi',
-        finished: 'Resi Terisi',
-        SYNCED: 'Terkirim'
-    };
-
-    return map[status] || status;
+    return getStatusBadgeDetails(status).label;
 }
 
 
@@ -178,12 +202,15 @@ function getStatusLabel(status) {
  *********************************/
 function generateChecklistByJenis(jenis) {
     const MAP = {
-        T1: ['EDC', 'Banner', 'Sertifikat', 'Layanan QRIS', 'QRIS', 'Thermal'],
-        T3: ['EDC', 'Banner', 'Sertifikat', 'Layanan QRIS', 'QRIS', 'Thermal'],
-        M3: ['EDC', 'Banner', 'Sertifikat', 'Thermal'],
+        T1: ['EDC', 'Banner', 'Sertifikat', 'Layanan QRIS', 'QRIS', 'Thermal', 'Hardbox'],
+        T3: ['EDC', 'Banner', 'Sertifikat', 'Layanan QRIS', 'QRIS', 'Thermal', 'Hardbox'],
+        M3: ['EDC', 'Banner', 'Sertifikat', 'Thermal', 'Hardbox'],
         ARRANET: ['EDC'],
         USER: ['EDC'],
-        Thermal: ['Thermal Paper']
+        ARAHNETS: ['EDC'],
+        MPN: ['EDC'],
+        Thermal: ['Thermal Paper'],
+        Kaos: ['Kaos']
     };
 
     const items = MAP[jenis] || [];
@@ -212,13 +239,13 @@ platformSelect.addEventListener('change', () => {
     let newOptions;
 
     if (value === 'Retur') {
-        newOptions = allJenisOptions.filter(opt => ['ARRANET', 'USER'].includes(opt.value));
+        newOptions = allJenisOptions.filter(opt => ['ARRANET', 'USER', 'ARAHNETS', 'MPN'].includes(opt.value));
     } else if (value === 'Aplikasi') {
         newOptions = allJenisOptions.filter(opt => ['T1', 'T3', 'M3'].includes(opt.value));
     } else if (value === 'TikTok') {
-        newOptions = allJenisOptions.filter(opt => ['T1', 'T3', 'M3', 'Thermal'].includes(opt.value));
+        newOptions = allJenisOptions.filter(opt => ['T1', 'T3', 'M3', 'Thermal', 'Kaos'].includes(opt.value));
     } else if (value === 'Shopee') {
-        newOptions = allJenisOptions.filter(opt => ['T1', 'T3', 'M3', 'Thermal'].includes(opt.value));
+        newOptions = allJenisOptions.filter(opt => ['T1', 'T3', 'M3', 'Thermal', 'Kaos'].includes(opt.value));
     } else {
         newOptions = [];
     }
@@ -320,6 +347,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputPenerima = document.getElementById('input-penerima');
     const inputPlatform = document.getElementById('input-platform');
     const inputJenis = document.getElementById('input-jenis');
+
+    if (inputPetugas) {
+        // Muat nama yang terakhir disimpan dari localStorage
+        const lastOperator = localStorage.getItem(LAST_OPERATOR_KEY);
+        if (lastOperator) {
+            inputPetugas.value = lastOperator;
+            // PENTING: Panggil validasi agar tombol 'Start' bisa langsung aktif
+            validateInputPhase(); 
+        }
+    }
 
     if (!phaseInput || !phaseChecklist) return;
 
@@ -508,8 +545,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== START =====
     btnStart?.addEventListener('click', () => {
+        const operatorName = inputPetugas.value.trim();
+        localStorage.setItem(LAST_OPERATOR_KEY, operatorName);
         startChecklist({
-            petugas: inputPetugas.value.trim(),
+            petugas: operatorName,
             penerima: inputPenerima.value.trim().toUpperCase(),
             platform: inputPlatform.value,
             jenis: inputJenis.value
@@ -647,7 +686,7 @@ async function uploadPhoto({ sessionId, type, item, resiNumber, file }) {
         form.append('mimeType', compressedBlob.type);
         form.append('base64', base64);
 
-        const res = await fetch('https://script.google.com/macros/s/AKfycbyTAe8m4utEzs8QK9WhfUkyFaeDTTa2dq0uO-G5ipK5GitOJUibnntSEMN8htcHPssS/exec', { // Pastikan link ini benar
+        const res = await fetch('https://script.google.com/macros/s/AKfycbxirsbXS1ZE9UYISHH1ZHomV8HmZcEoRCZc_TrMZ9AidJB07DPISXNKR3cT258Dfw8G/exec', { // Pastikan link ini benar
             method: 'POST',
             body: form
         });
@@ -659,8 +698,12 @@ async function uploadPhoto({ sessionId, type, item, resiNumber, file }) {
             throw new Error(`Gagal upload ke server: ${res.status} - ${errorText}`);
         }
 
-        const photoUrl = await res.text();
-        console.log(`Upload berhasil untuk item ${item}: ${photoUrl}`);
+        const result = await res.json(); 
+        const photoUrl = result.photoUrl; // Ambil URL dari properti photoUrl
+
+        if (!photoUrl) {
+          throw new Error("Server tidak mengembalikan photoUrl di dalam respons JSON.");
+        }
 
         // Pastikan kembalian konsisten
         return { photoUrl, item: item };

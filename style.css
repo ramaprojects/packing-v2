@@ -228,3 +228,146 @@ h3 {
   left: 12px;
   z-index: 1050;
 }
+
+/* =================================
+   PENYEMPURNAAN UI (Tambahan)
+   ================================= */
+
+/* 1. Menyatukan Warna Aksi Utama */
+
+/* Mendefinisikan warna utama di root untuk digunakan kembali */
+:root {
+  --primary-color: #166d6e; /* Warna teal dari .btn-primary Anda */
+}
+
+/* Mengubah warna tombol #btnFinish agar konsisten */
+#btnFinish {
+  background: var(--primary-color);
+  color: #fff;
+}
+#btnFinish:disabled {
+  background: #a0a0a0; /* Abu-abu yang sedikit lebih gelap untuk disabled */
+  color: #e0e0e0;
+}
+
+/* Membuat warna navigasi aktif juga menggunakan variabel utama */
+.bottom-nav .nav-item.active {
+  color: var(--primary-color);
+}
+
+
+/* 2. Memberi "Napas" dan Kedalaman pada Kartu */
+
+/* Menimpa gaya .card yang ada dengan bayangan dan transisi */
+.card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border-soft); /* Memastikan border tetap ada */
+  padding: 0; /* Menghapus padding dari .card agar .card-body yang mengontrol */
+  transition: all 0.25s ease-out;
+}
+
+/* Memperbaiki padding di dalam kartu yang terasa sempit */
+.card-body {
+  /* Menggunakan sistem 'gap' Anda untuk konsistensi */
+  padding: var(--gap-lg); /* 16px, ini akan membuat semua kartu terlihat lebih lega */
+}
+
+/* Khusus untuk kartu checklist yang lebih simpel, kita bisa kurangi paddingnya */
+#checklistContainer .card {
+  /* Mengembalikan padding asli Anda untuk item checklist */
+  padding: var(--gap-md); 
+}
+#checklistContainer .card .card-body {
+  /* Khusus item checklist tidak perlu padding tambahan */
+  padding: 0;
+}
+
+
+/* 3. Umpan Balik Interaktif (Hover Effects) */
+
+/* Efek saat mouse diarahkan ke kartu yang merupakan tautan (di History & Dashboard) */
+a.card:hover, a.list-group-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(22, 109, 110, 0.12); /* Bayangan dengan hint warna utama */
+  z-index: 10;
+}
+
+
+/* 4. Penyempurnaan Kecil Lainnya */
+
+/* Membuat header utama lebih rapi */
+header {
+  border-bottom: 1px solid var(--border-soft) !important;
+  background-color: var(--bg-card);
+}
+
+/* Memberi efek transisi pada navigasi bawah */
+.bottom-nav .nav-item {
+  transition: color 0.2s ease;
+}
+
+/* =================================
+   PENYEMPURNAAN PANEL RESI
+   ================================= */
+
+/* Overlay gelap di belakang panel */
+#resi-panel-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#resi-panel-overlay.show {
+    opacity: 1;
+}
+
+/* Kontainer utama untuk panel */
+.resi-panel-container {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-card);
+    z-index: 1045;
+    border-top-left-radius: var(--radius);
+    border-top-right-radius: var(--radius);
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.15);
+    
+    /* Sembunyikan di bawah layar secara default */
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out;
+}
+
+/* Kelas 'show' akan menggeser panel ke atas */
+.resi-panel-container.show {
+    transform: translateY(0);
+}
+
+/* Header panel */
+.resi-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--gap-md) var(--gap-lg);
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.resi-panel-header h6 {
+    font-weight: 600;
+}
+
+/* Body panel */
+.resi-panel-body {
+    padding: var(--gap-lg);
+}
+
+/* Detail summary penerima di dalam panel */
+#resi-shipping-summary {
+    background-color: var(--bg-page);
+    padding: var(--gap-md);
+    border-radius: calc(var(--radius) / 2);
+    font-size: 0.9rem;
+}
