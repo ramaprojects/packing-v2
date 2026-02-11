@@ -1,7 +1,12 @@
+// GANTI SELURUH ISI FILE dashboard.js DENGAN KODE INI
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Sumber data tetap dari localStorage, yang kita asumsikan sudah diisi/diperbarui oleh history.js
     const allSessions = loadAllSessions();
+
+    // Logika pesan selamat datang Anda tetap dipertahankan
     const lastOperator = localStorage.getItem(LAST_OPERATOR_KEY);
-    const welcomeEl = document.getElementById('welcome-message');
+    const welcomeEl = document.getElementById('welcome-message'); // Pastikan elemen ini ada di index.html
     if (lastOperator && welcomeEl) {
         welcomeEl.querySelector('h5').textContent = `Selamat datang, ${lastOperator}!`;
     }
@@ -13,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * Menghitung dan menampilkan statistik utama di kartu.
+ * Diperbarui untuk menggunakan nama properti dari server.
  * @param {Array} sessions - Array semua sesi packing.
  */
 function renderStats(sessions) {
@@ -20,15 +26,18 @@ function renderStats(sessions) {
     const todayCountEl = document.getElementById('stat-today-count');
 
     // 1. Hitung sesi yang menunggu resi
-    const pendingResiCount = sessions.filter(s => s.status === 'CHECKLIST_DONE').length;
+    // --- PERUBAHAN: s.status -> s.Status ---
+    const pendingResiCount = sessions.filter(s => s.Status === 'CHECKLIST_DONE').length;
 
     // 2. Hitung sesi yang selesai hari ini
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
+    // --- PERUBAHAN: Menggunakan WaktuSelesai dan Status ---
     const todayCount = sessions.filter(s => {
-        const finishedDate = new Date(s.finishedAt || s.updatedAt);
-        return (s.status === 'finished' || s.status === 'SYNCED') && finishedDate >= todayStart;
+        // Gunakan WaktuSelesai sebagai acuan utama yang akurat
+        const finishedDate = s.WaktuSelesai ? new Date(s.WaktuSelesai) : null;
+        return (s.Status === 'finished' || s.Status === 'SYNCED') && finishedDate && finishedDate >= todayStart;
     }).length;
 
     // Tampilkan di HTML
@@ -37,13 +46,19 @@ function renderStats(sessions) {
 }
 
 
+/**
+ * Menampilkan beberapa sesi terakhir di daftar "Aktivitas Terkini".
+ * Diperbarui untuk menggunakan nama properti dari server.
+ * @param {Array} sessions - Array semua sesi.
+ */
 function renderRecentActivity(sessions) {
     const container = document.getElementById('recent-activity-list');
     if (!container) return;
 
+    // --- PERUBAHAN: Menggunakan WaktuDibuat untuk pengurutan ---
     const recentSessions = sessions
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 3);
+        .sort((a, b) => new Date(b.WaktuDibuat) - new Date(a.WaktuDibuat))
+        .slice(0, 3); // Tampilkan 5 agar tidak kosong
 
     if (recentSessions.length === 0) {
         container.innerHTML = '<p class="text-center text-muted p-4">Belum ada aktivitas.</p>';
@@ -53,25 +68,21 @@ function renderRecentActivity(sessions) {
     container.innerHTML = '';
 
     recentSessions.forEach(session => {
-        // --- PERUBAHAN DI SINI ---
-        // Panggil fungsi terpusat untuk mendapatkan detail badge
-        const badge = getStatusBadgeDetails(session.status);
+        // --- PERUBAHAN: Menyesuaikan dengan format data dari server ---
+        const badge = getStatusBadgeDetails(session.Status);
         
         const linkItem = document.createElement('a');
-        linkItem.href = `summary.html?sessionId=${session.sessionId}`;
+        linkItem.href = `summary.html?sessionId=${session.SessionID}`; // Gunakan SessionID
         linkItem.className = 'list-group-item list-group-item-action';
         
-        // Gunakan properti .label dan .className dari objek badge
         linkItem.innerHTML = `
             <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1 text-truncate">${session.shipping.penerima}</h6>
-                <small>${formatDate(session.createdAt)}</small>
+                <h6 class="mb-1 text-truncate">${session.Penerima}</h6>
+                <small>${formatDate(session.WaktuDibuat)}</small>
             </div>
-            <small class="mb-1 d-block">${session.shipping.jenis} - ${session.shipping.platform}</small>
+            <small class="mb-1 d-block">${session.JenisBarang || ''} - ${session.Platform || ''}</small>
             <span class="badge ${badge.className}">${badge.label}</span>
         `;
-        // --- AKHIR PERUBAHAN ---
         container.appendChild(linkItem);
     });
 }
-

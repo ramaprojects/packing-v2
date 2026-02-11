@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (lastOperator) {
             inputPetugas.value = lastOperator;
             // PENTING: Panggil validasi agar tombol 'Start' bisa langsung aktif
-            validateInputPhase(); 
+            validateInputPhase();
         }
     }
 
@@ -563,23 +563,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ===== FINISH =====
-    // GANTI event listener 'click' pada btnFinish yang ada dengan ini
     btnFinish?.addEventListener('click', async () => {
-        isFinishingProcess = true; // Tandai proses sedang berjalan
+        isFinishingProcess = true;
         showLoading();
 
         try {
             const session = loadCurrentSession();
-            // DIUBAH: Cari item yang memiliki file di buffer
             const itemsToUpload = session.checklist.filter(item => item.hasPendingFile && !item.photoId);
 
             if (itemsToUpload.length > 0) {
                 const uploadPromises = itemsToUpload.map(item => {
-                    // PENTING: Ambil File object dari fileBuffer
                     const fileToUpload = fileBuffer[item.id];
 
                     if (!fileToUpload) {
-                        // Jika karena suatu alasan file tidak ada di buffer, lemparkan error
                         throw new Error(`File untuk item ${item.id} tidak ditemukan di buffer.`);
                     }
 
@@ -587,7 +583,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         sessionId: session.sessionId,
                         type: 'checklist',
                         item: item.id,
-                        file: fileToUpload // Gunakan file dari buffer
+                        file: fileToUpload,
+                        penerima: session.shipping.penerima
                     });
                 });
 
@@ -600,25 +597,23 @@ document.addEventListener('DOMContentLoaded', () => {
                             sessionItem.photoId = result.photoUrl;
                             URL.revokeObjectURL(sessionItem.photoPreviewUrl); // Cleanup
                             sessionItem.photoPreviewUrl = null;
-                            sessionItem.hasPendingFile = false; // Tandai sudah selesai
+                            sessionItem.hasPendingFile = false;
                         }
                     });
                 });
             }
 
             finishChecklist();
-            fileBuffer = {}; // BARU: Kosongkan buffer setelah semua selesai
+            fileBuffer = {};
             window.location.href = 'resi.html';
 
         } catch (error) {
             console.error('Proses upload massal gagal:', error);
             alert('Gagal mengunggah foto. Silakan periksa koneksi dan coba lagi.');
-            isFinishingProcess = false; // Reset status jika gagal
+            isFinishingProcess = false;
             hideLoading();
         }
     });
-
-
 
     function showLoading() {
         document.getElementById('loading-overlay').classList.remove('d-none');
@@ -634,7 +629,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('confirm-cancel')?.addEventListener('click', () => {
-        // MODIFIKASI: Tambahkan pembersihan URL pratinjau
         const session = loadCurrentSession();
         if (session?.checklist) {
             session.checklist.forEach(item => {
@@ -665,13 +659,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-async function uploadPhoto({ sessionId, type, item, resiNumber, file }) {
-    // 1. Variabel isUploading dan blok if/finally DIHAPUS
-    //    Ini memungkinkan beberapa upload berjalan secara bersamaan.
+async function uploadPhoto({ sessionId, type, item, penerima, resiNumber, file }) {
 
     try {
         console.log(`Mulai kompresi untuk item ${item}, ukuran asli: ${(file.size / 1024).toFixed(2)} KB`);
-        const compressedBlob = await compressImage(file); // Menghasilkan Blob
+        const compressedBlob = await compressImage(file);
         console.log(`Kompresi selesai untuk item ${item}, ukuran baru: ${(compressedBlob.size / 1024).toFixed(2)} KB`);
 
         const base64 = await fileToBase64(compressedBlob);
@@ -681,51 +673,36 @@ async function uploadPhoto({ sessionId, type, item, resiNumber, file }) {
         form.append('type', type);
         form.append('item', item || '');
         form.append('resiNumber', resiNumber || '');
-
+        form.append('penerima', penerima || '');
         form.append('filename', file.name);
         form.append('mimeType', compressedBlob.type);
         form.append('base64', base64);
 
-        const res = await fetch('https://script.google.com/macros/s/AKfycbxirsbXS1ZE9UYISHH1ZHomV8HmZcEoRCZc_TrMZ9AidJB07DPISXNKR3cT258Dfw8G/exec', { // Pastikan link ini benar
+        const res = await fetch('https://script.google.com/macros/s/AKfycbzOG14sXeZYe50c7IBgleSUHfe5SYt38NfSVhvtoTlrTkORFdv23LU99oPiZERSOoHS/exec', {
             method: 'POST',
             body: form
         });
 
-        // 2. Tambahkan pengecekan status respons
-        //    Jika server mengembalikan error, lempar error agar Promise.all gagal.
         if (!res.ok) {
             const errorText = await res.text();
             throw new Error(`Gagal upload ke server: ${res.status} - ${errorText}`);
         }
 
-        const result = await res.json(); 
-        const photoUrl = result.photoUrl; // Ambil URL dari properti photoUrl
+        const result = await res.json();
+        const photoUrl = result.photoUrl;
 
         if (!photoUrl) {
-          throw new Error("Server tidak mengembalikan photoUrl di dalam respons JSON.");
+            throw new Error("Server tidak mengembalikan photoUrl di dalam respons JSON.");
         }
 
-        // Pastikan kembalian konsisten
         return { photoUrl, item: item };
 
     } catch (error) {
         console.error(`Gagal upload foto untuk item ${item}:`, error);
 
-        // 3. Lempar ulang error agar bisa ditangkap oleh Promise.all
         throw error;
     }
 }
-
-
-// Mencegah user meninggalkan halaman saat upload sedang berlangsung
-// window.addEventListener('beforeunload', function (event) {
-//     if (isFinishingProcess) {
-//         const message = 'Proses upload dan penyelesaian sedang berjalan. Jika Anda meninggalkan halaman, data mungkin tidak tersimpan dengan benar.';
-//         event.returnValue = message;
-//         return message;
-//     }
-// });
-
 
 function fileToBase64(file) {
     return new Promise(resolve => {

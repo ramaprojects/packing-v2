@@ -1,6 +1,47 @@
 // Mempertahankan pola caching Anda yang efisien
 let historyCache = [];
 
+async function fetchAndRenderHistory() {
+    const container = document.getElementById('history-list');
+    const emptyView = document.getElementById('history-empty');
+    const searchInput = document.getElementById('historySearch');
+
+    // Tampilkan status "Memuat..."
+    container.innerHTML = `<p class="text-center text-muted mt-5">Memuat riwayat dari server...</p>`;
+    container.classList.remove('d-none');
+    emptyView.classList.add('d-none');
+    searchInput.disabled = true;
+
+    try {
+        // Asumsi LINK_GAS didefinisikan di app.js
+        const response = await fetch('https://script.google.com/macros/s/AKfycbzOG14sXeZYe50c7IBgleSUHfe5SYt38NfSVhvtoTlrTkORFdv23LU99oPiZERSOoHS/exec'); 
+        if (!response.ok) throw new Error(`Server Error: ${response.statusText}`);
+        
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        // Simpan ke localStorage (untuk diakses oleh halaman summary.html)
+        saveAllSessions(result.data);
+
+        // --- PERUBAHAN: Menyesuaikan dengan format data dari server ---
+        historyCache = result.data.sort((a, b) => {
+            const dateA = a.WaktuSelesai || a.WaktuDibuat;
+            const dateB = b.WaktuSelesai || b.WaktuDibuat;
+            return new Date(dateB) - new Date(dateA);
+        });
+
+        // Render tampilan dengan data baru
+        renderHistory();
+
+    } catch (error) {
+        console.error("Gagal memuat riwayat dari server:", error);
+        container.innerHTML = `<p class="text-center text-danger mt-5">Gagal memuat riwayat. Periksa koneksi dan coba lagi.</p>`;
+    } finally {
+        searchInput.disabled = false;
+    }
+}
+
+
 // === FUNGSI BARU: renderHistory ditulis ulang sepenuhnya ===
 function renderHistory(list = historyCache) {
     const container = document.getElementById('history-list');
@@ -27,13 +68,10 @@ function renderHistory(list = historyCache) {
 
     // 2. Kelompokkan sesi berdasarkan tanggal (inti dari perubahan)
     const groupedByDate = list.reduce((acc, session) => {
-        // Prioritaskan tanggal selesai. Jika tidak ada, baru gunakan tanggal dibuat.
-        const groupDate = session.finishedAt || session.createdAt; 
-        const dateKey = new Date(groupDate).toISOString().split('T')[0]; // Kunci: YYYY-MM-DD
+        const groupDate = session.WaktuSelesai || session.WaktuDibuat; 
+        const dateKey = new Date(groupDate).toISOString().split('T')[0];
         
-        if (!acc[dateKey]) {
-            acc[dateKey] = [];
-        }
+        if (!acc[dateKey]) acc[dateKey] = [];
         acc[dateKey].push(session);
         return acc;
     }, {});
@@ -73,59 +111,19 @@ function renderHistory(list = historyCache) {
 
 // === FUNGSI BARU: Membuat kartu sesi yang lebih ringkas ===
 function createSessionCard(session) {
-    const badge = getStatusBadgeDetails(session.status); // Menggunakan fungsi global Anda
+    // --- PERUBAHAN: Menyesuaikan dengan format data dari server ---
+    const badge = getStatusBadgeDetails(session.Status); 
     return `
-        <a href="summary.html?sessionId=${session.sessionId}" class="list-group-item list-group-item-action">
+        <a href="summary.html?sessionId=${session.SessionID}" class="list-group-item list-group-item-action">
             <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1 text-truncate fw-semibold">${session.shipping.penerima}</h6>
-                <small class="text-muted">${new Date(session.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</small>
+                <h6 class="mb-1 text-truncate fw-semibold">${session.Penerima}</h6>
+                <small class="text-muted">${new Date(session.WaktuDibuat).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</small>
             </div>
-            <small class="mb-1 d-block text-muted">${session.shipping.jenis} - ${session.shipping.platform}</small>
+            <small class="mb-1 d-block text-muted">${session.JenisBarang} - ${session.Platform}</small>
             <span class="badge ${badge.className}">${badge.label}</span>
         </a>
     `;
 }
-
-// === DOMContentLoaded: Menggunakan struktur Anda yang sudah ada ===
-document.addEventListener('DOMContentLoaded', () => {
-    // Memuat dan menyortir data sekali, sama seperti kode Anda
-    historyCache = loadAllSessions()
-        .sort((a, b) => {
-            const dateA = a.finishedAt || a.createdAt;
-            const dateB = b.finishedAt || b.createdAt;
-            return new Date(dateB) - new Date(dateA); // Urutkan dari yang terbaru
-        });
-
-    // Render awal
-    renderHistory();
-
-    const search = document.getElementById('historySearch');
-    if (!search) return;
-
-    // Mempertahankan logika pencarian komprehensif Anda
-    search.addEventListener('input', e => {
-        const q = e.target.value.toLowerCase();
-        const filtered = historyCache.filter(s =>
-            (s.resi?.number || '').toLowerCase().includes(q) ||
-            s.shipping.penerima.toLowerCase().includes(q) ||
-            (s.operator || '-').toLowerCase().includes(q)
-        );
-        renderHistory(filtered);
-    });
-
-    const container = document.getElementById('history-list');
-    container.addEventListener('click', (e) => {
-        // Cari tombol WhatsApp terdekat yang di-klik
-        const whatsappButton = e.target.closest('.btn-send-group-whatsapp');
-        if (whatsappButton) {
-            // Dapatkan kunci tanggal dari data-attribute
-            const dateKey = whatsappButton.dataset.dateKey;
-            handleBulkSendToWhatsApp(dateKey);
-        }
-    });
-    // Panggilan ini tetap relevan
-    updateResiNavBadge();
-});
 
 // Di dalam file: history.js (di luar fungsi lain)
 
@@ -136,19 +134,17 @@ document.addEventListener('DOMContentLoaded', () => {
  * @returns {string} - Pesan teks yang diformat.
  */
 function createBulkWhatsAppMessage(sessions, dateKey) {
-    const formattedDate = new Date(dateKey).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    let message = `*Laporan Harian Packing - ${formattedDate}*\n`;
-    message += `*Total Sesi:* ${sessions.length}\n\n`;
+    // ... (Fungsi ini juga perlu di-update)
+    const formattedDate = new Date(dateKey).toLocaleDateString('id-ID', { /* ... */ });
+    let message = `*Laporan Harian Packing - ${formattedDate}*\n*Total Sesi:* ${sessions.length}\n\n`;
 
     sessions.forEach((session, index) => {
-        message += `*Sesi ${index + 1}: ${session.shipping.penerima}*\n`;
-        message += `- Resi: ${session.resi?.number || 'Belum diisi'}\n`;
-        message += `- Petugas: ${session.operator || '-'}\n`;
-        // Menyertakan link ke halaman summary untuk detail dan foto
-        const summaryUrl = `${window.location.origin}${window.location.pathname.replace('history.html', '')}summary.html?sessionId=${session.sessionId}`;
+        message += `*Sesi ${index + 1}: ${session.Penerima}*\n`;
+        message += `- Resi: ${session.NomorResi || 'Belum diisi'}\n`;
+        message += `- Petugas: ${session.Petugas || '-'}\n`;
+        const summaryUrl = `${window.location.origin}${window.location.pathname.replace('history.html', '')}summary.html?sessionId=${session.SessionID}`;
         message += `- Detail & Foto: ${summaryUrl}\n\n`;
     });
-
     return message;
 }
 
@@ -157,11 +153,8 @@ function createBulkWhatsAppMessage(sessions, dateKey) {
  * @param {string} dateKey - Kunci tanggal (YYYY-MM-DD) dari grup yang dipilih.
  */
 function handleBulkSendToWhatsApp(dateKey) {
-    // 1. Dapatkan semua sesi untuk tanggal yang dipilih dari cache
     const sessionsOnDate = historyCache.filter(s => {
-        // Prioritaskan tanggal selesai. Jika tidak ada, baru gunakan tanggal dibuat.
-        const sessionDate = s.finishedAt || s.createdAt;
-        // Bandingkan tanggal yang relevan dengan dateKey dari tombol
+        const sessionDate = s.WaktuSelesai || s.WaktuDibuat;
         return new Date(sessionDate).toISOString().split('T')[0] === dateKey;
     });
 
@@ -186,3 +179,35 @@ function handleBulkSendToWhatsApp(dateKey) {
     const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
 }
+
+// === DOMContentLoaded: Menggunakan struktur Anda yang sudah ada ===
+document.addEventListener('DOMContentLoaded', () => {
+    fetchAndRenderHistory();
+
+const search = document.getElementById('historySearch');
+    search.addEventListener('input', e => {
+        const q = e.target.value.toLowerCase();
+        // --- PERUBAHAN: Menyesuaikan dengan format data dari server ---
+        const filtered = historyCache.filter(s =>
+            (s.NomorResi || '').toLowerCase().includes(q) ||
+            s.Penerima.toLowerCase().includes(q) ||
+            (s.Petugas || '-').toLowerCase().includes(q)
+        );
+        renderHistory(filtered);
+    });
+
+
+    const container = document.getElementById('history-list');
+    container.addEventListener('click', (e) => {
+        // Cari tombol WhatsApp terdekat yang di-klik
+        const whatsappButton = e.target.closest('.btn-send-group-whatsapp');
+        if (whatsappButton) {
+            // Dapatkan kunci tanggal dari data-attribute
+            const dateKey = whatsappButton.dataset.dateKey;
+            handleBulkSendToWhatsApp(dateKey);
+        }
+    });
+    // Panggilan ini tetap relevan
+    updateResiNavBadge();
+});
+
