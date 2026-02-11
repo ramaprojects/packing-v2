@@ -1,8 +1,4 @@
-// summary.js
 
-/**
- * Fungsi utama yang berjalan saat halaman dimuat
- */
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Dapatkan sessionId dari parameter URL
     const params = new URLSearchParams(window.location.search);
@@ -72,7 +68,7 @@ function renderChecklistPhotos(session) {
     const container = document.getElementById('summary-checklist-container');
     if (!container) return;
 
-    container.innerHTML = ''; // Kosongkan kontainer
+    container.innerHTML = '';
 
     session.checklist.forEach(item => {
         const card = document.createElement('div');
@@ -94,7 +90,6 @@ function renderChecklistPhotos(session) {
 }
 
 function showErrorPage() {
-    // Sembunyikan konten utama dan tampilkan pesan error
     document.querySelector('main > .card, main > h5').forEach(el => el.classList.add('d-none'));
     document.getElementById('summary-not-found').classList.remove('d-none');
 }

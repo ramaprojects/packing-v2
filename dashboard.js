@@ -1,13 +1,14 @@
-// dashboard.js
-
 document.addEventListener('DOMContentLoaded', () => {
-    // Muat semua data sesi dari localStorage
     const allSessions = loadAllSessions();
+    const lastOperator = localStorage.getItem(LAST_OPERATOR_KEY);
+    const welcomeEl = document.getElementById('welcome-message');
+    if (lastOperator && welcomeEl) {
+        welcomeEl.querySelector('h5').textContent = `Selamat datang, ${lastOperator}!`;
+    }
 
-    // Jalankan fungsi untuk merender statistik dan aktivitas
     renderStats(allSessions);
     renderRecentActivity(allSessions);
-    updateResiNavBadge(); // Fungsi ini dari app.js
+    updateResiNavBadge();
 });
 
 /**
@@ -23,7 +24,7 @@ function renderStats(sessions) {
 
     // 2. Hitung sesi yang selesai hari ini
     const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0); // Set waktu ke awal hari ini
+    todayStart.setHours(0, 0, 0, 0);
 
     const todayCount = sessions.filter(s => {
         const finishedDate = new Date(s.finishedAt || s.updatedAt);
