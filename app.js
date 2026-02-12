@@ -470,7 +470,6 @@ document.addEventListener('DOMContentLoaded', () => {
         input.click();
     });
 
-    // GANTI event listener 'change' yang ada dengan ini
     checklistContainer.addEventListener('change', async (e) => {
         if (!e.target.matches('.checklist-photo')) return;
 
@@ -481,7 +480,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const session = loadCurrentSession();
         const itemId = session.checklist[idx].id;
 
-        // BARU: Simpan File object ke buffer, bukan ke state sesi
         fileBuffer[itemId] = file;
 
         const previewUrl = URL.createObjectURL(file);
@@ -490,15 +488,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = s.checklist[idx];
             if (item.photoId) return;
 
-            // DIUBAH: Jangan simpan 'file' di sini. Cukup simpan URL pratinjau.
-            // Hapus baris: item.photoFile = file;
             item.photoPreviewUrl = previewUrl;
-            item.hasPendingFile = true; // BARU: Tandai bahwa ada file yang menunggu di buffer
+            item.hasPendingFile = true;
             s.progress = calculateProgress(s.checklist);
         });
 
         renderChecklist();
-        // Anda masih perlu mengimplementasikan validateFinish()
         // validateFinish();
     });
 
@@ -582,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const sessionItem = s.checklist.find(i => i.id === result.item);
                         if (sessionItem && result?.photoUrl) {
                             sessionItem.photoId = result.photoUrl;
-                            URL.revokeObjectURL(sessionItem.photoPreviewUrl); // Cleanup
+                            URL.revokeObjectURL(sessionItem.photoPreviewUrl);
                             sessionItem.photoPreviewUrl = null;
                             sessionItem.hasPendingFile = false;
                         }

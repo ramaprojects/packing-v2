@@ -1,21 +1,18 @@
 
-// --- FUNGSI BARU: Untuk sinkronisasi data sesi penuh ke server ---
 /**
- * Mengirim seluruh objek sesi ke Google Apps Script untuk disimpan di 'Master_Sesi'.
- * @param {object} session - Objek sesi lengkap yang akan disinkronkan.
+ * @param {object} session
  */
 async function syncSessionToServer(session) {
     try {
-        // Pastikan LINK_GAS tersedia (diasumsikan dari app.js atau didefinisikan secara global)
         const url = LINK_GAS + '?type=sync_session';
 
         const response = await fetch(url, {
             method: 'POST',
             mode: 'cors',
             headers: {
-                'Content-Type': 'text/plain;charset=utf-8', // Apps Script membaca postData sebagai teks
+                'Content-Type': 'text/plain;charset=utf-8',
             },
-            body: JSON.stringify(session) // Kirim seluruh objek sesi sebagai string JSON
+            body: JSON.stringify(session)
         });
 
         if (!response.ok) {
@@ -25,7 +22,6 @@ async function syncSessionToServer(session) {
         const result = await response.json();
         if (result.status === 'success') {
             console.log('Sinkronisasi sesi berhasil:', session.sessionId);
-            // Perbarui status di localStorage menjadi SYNCED
             const all = loadAllSessions();
             const index = all.findIndex(s => s.sessionId === session.sessionId);
             if (index > -1) {
@@ -36,15 +32,11 @@ async function syncSessionToServer(session) {
             throw new Error(result.message || 'Sinkronisasi gagal di sisi server.');
         }
     } catch (error) {
-        // Jika sinkronisasi gagal (misal, karena offline), jangan hentikan aplikasi.
-        // Sesi akan tetap berstatus 'finished' dan bisa dicoba sinkronisasi lagi nanti.
         console.error('Sinkronisasi sesi gagal:', error);
-        // Anda bisa menambahkan notifikasi 'toast' di sini di masa depan.
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // === DOM REFERENCES ===
     const summaryEl = document.getElementById('resi-summary');
     const panelEl = document.getElementById('resi-panel');
     const overlayEl = document.getElementById('resi-panel-overlay');
@@ -61,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSessionId = null;
     let resiPhotoFile = null;
 
-    // === FUNGSI KONTROL PANEL (MODAL) ===
     function showResiPanel() {
         panelEl.classList.add('show');
         overlayEl.classList.remove('d-none');
@@ -77,7 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
         document.body.style.overflow = 'auto';
 
-        // Reset state
         currentSessionId = null;
         resiPhotoFile = null;
         inputResi.value = '';
@@ -95,7 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderQueue() {
-        // ... (Fungsi ini tetap sama seperti jawaban sebelumnya, tidak perlu diubah)
         const queue = getQueue();
         summaryEl.innerHTML = '';
         if (!queue.length) {
@@ -125,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === BUKA PANEL ===
     summaryEl.addEventListener('click', (e) => {
-        // ... (Fungsi ini tetap sama, tidak perlu diubah)
         const actionButton = e.target.closest('.btn-resi-action');
         if (!actionButton) return;
         currentSessionId = actionButton.dataset.sessionId;
@@ -146,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
     inputResi.addEventListener('input', updateFinishButton);
     btnUploadResi.addEventListener('click', () => inputUploadResi.click());
     inputUploadResi.addEventListener('change', e => {
-        // ... (Fungsi ini tetap sama, tidak perlu diubah)
         const file = e.target.files[0];
         if (!file) return;
         resiPhotoFile = file;
@@ -160,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
    /* ===============================
-       4. FINISH RESI (DENGAN PERUBAHAN)
+       4. FINISH RESI
     =============================== */
     btnFinish.addEventListener('click', async () => {
         if (!currentSessionId) return;
@@ -172,9 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoading();
         hideResiPanel();
 
-        let sessionToSync = null; // Variabel untuk menampung sesi yang akan di-sync
+        let sessionToSync = null; 
 
-        // Proses update data lokal
         const all = loadAllSessions();
         const sessionIndex = all.findIndex(s => s.sessionId === sessionIdToUpdate);
         if (sessionIndex < 0) {
@@ -182,16 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Update data sesi
         all[sessionIndex].resi.number = resiNumber;
         all[sessionIndex].status = 'finished';
         all[sessionIndex].finishedAt = new Date().toISOString();
         
-        // Simpan sesi yang sudah diupdate ke variabel
         sessionToSync = all[sessionIndex];
         saveAllSessions(all);
 
-        // Proses upload foto
         if (fileToUpload) {
             try {
                 const { photoUrl } = await uploadPhoto({
@@ -199,15 +182,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     type: 'resi',
                     resiNumber,
                     file: fileToUpload,
-                    penerima: sessionToSync.shipping.penerima // Kirim juga nama penerima
+                    penerima: sessionToSync.shipping.penerima 
                 });
 
-                // Muat lagi data terbaru untuk menambahkan URL foto
                 const currentSessions = loadAllSessions();
                 const finalIndex = currentSessions.findIndex(s => s.sessionId === sessionIdToUpdate);
                 if (finalIndex >= 0) {
                     currentSessions[finalIndex].resi.photoUrl = photoUrl;
-                    // Update variabel `sessionToSync` dengan data URL foto terbaru
                     sessionToSync = currentSessions[finalIndex];
                     saveAllSessions(currentSessions);
                 }
@@ -218,26 +199,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         hideLoading();
-        
-        // --- PERUBAHAN DI SINI: Panggil fungsi sinkronisasi ---
+
         if (sessionToSync) {
-            // Panggil sinkronisasi setelah semua proses lokal selesai.
-            // Kita tidak perlu 'await' di sini agar UI tidak menunggu.
-            // Proses sinkronisasi berjalan di latar belakang.
             syncSessionToServer(sessionToSync); 
         }
 
-        // Perbarui UI
         renderQueue();
         updateResiBadge();
         updateResiNavBadge();
     });
 
-    // ... (Fungsi showLoading dan hideLoading tetap sama) ...
     function showLoading() { document.getElementById('loading-overlay')?.classList.remove('d-none'); }
     function hideLoading() { document.getElementById('loading-overlay')?.classList.add('d-none'); }
 
-    // === INIT ===
     renderQueue();
     updateResiBadge();
     updateResiNavBadge();

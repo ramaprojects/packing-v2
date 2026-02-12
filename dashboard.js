@@ -1,65 +1,44 @@
-// GANTI SELURUH ISI FILE dashboard.js DENGAN KODE INI
+
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Sumber data tetap dari localStorage, yang kita asumsikan sudah diisi/diperbarui oleh history.js
     const allSessions = loadAllSessions();
-
-    // Logika pesan selamat datang Anda tetap dipertahankan
     const lastOperator = localStorage.getItem(LAST_OPERATOR_KEY);
-    const welcomeEl = document.getElementById('welcome-message'); // Pastikan elemen ini ada di index.html
+    const welcomeEl = document.getElementById('welcome-message'); 
     if (lastOperator && welcomeEl) {
         welcomeEl.querySelector('h5').textContent = `Selamat datang, ${lastOperator}!`;
     }
-
     renderStats(allSessions);
     renderRecentActivity(allSessions);
     updateResiNavBadge();
 });
 
 /**
- * Menghitung dan menampilkan statistik utama di kartu.
- * Diperbarui untuk menggunakan nama properti dari server.
- * @param {Array} sessions - Array semua sesi packing.
+ * @param {Array} sessions
  */
 function renderStats(sessions) {
     const pendingResiEl = document.getElementById('stat-pending-resi');
     const todayCountEl = document.getElementById('stat-today-count');
-
-    // 1. Hitung sesi yang menunggu resi
-    // --- PERUBAHAN: s.status -> s.Status ---
     const pendingResiCount = sessions.filter(s => s.Status === 'CHECKLIST_DONE').length;
-
-    // 2. Hitung sesi yang selesai hari ini
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-
-    // --- PERUBAHAN: Menggunakan WaktuSelesai dan Status ---
     const todayCount = sessions.filter(s => {
-        // Gunakan WaktuSelesai sebagai acuan utama yang akurat
         const finishedDate = s.WaktuSelesai ? new Date(s.WaktuSelesai) : null;
         return (s.Status === 'finished' || s.Status === 'SYNCED') && finishedDate && finishedDate >= todayStart;
     }).length;
-
-    // Tampilkan di HTML
     if (pendingResiEl) pendingResiEl.textContent = pendingResiCount;
     if (todayCountEl) todayCountEl.textContent = todayCount;
 }
 
 
 /**
- * Menampilkan beberapa sesi terakhir di daftar "Aktivitas Terkini".
- * Diperbarui untuk menggunakan nama properti dari server.
- * @param {Array} sessions - Array semua sesi.
+ * @param {Array} sessions
  */
 function renderRecentActivity(sessions) {
     const container = document.getElementById('recent-activity-list');
     if (!container) return;
-
-    // --- PERUBAHAN: Menggunakan WaktuDibuat untuk pengurutan ---
     const recentSessions = sessions
         .sort((a, b) => new Date(b.WaktuDibuat) - new Date(a.WaktuDibuat))
-        .slice(0, 3); // Tampilkan 5 agar tidak kosong
-
+        .slice(0, 3);
     if (recentSessions.length === 0) {
         container.innerHTML = '<p class="text-center text-muted p-4">Belum ada aktivitas.</p>';
         return;
@@ -68,11 +47,10 @@ function renderRecentActivity(sessions) {
     container.innerHTML = '';
 
     recentSessions.forEach(session => {
-        // --- PERUBAHAN: Menyesuaikan dengan format data dari server ---
         const badge = getStatusBadgeDetails(session.Status);
         
         const linkItem = document.createElement('a');
-        linkItem.href = `summary.html?sessionId=${session.SessionID}`; // Gunakan SessionID
+        linkItem.href = `summary.html?sessionId=${session.SessionID}`; 
         linkItem.className = 'list-group-item list-group-item-action';
         
         linkItem.innerHTML = `

@@ -10,14 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchSessionDataFromServer(sessionId);
 });
 
-/**
- * Mengambil data satu sesi spesifik dari server.
- */
 async function fetchSessionDataFromServer(sessionId) {
-    showLoadingState(); // Tampilkan status loading
+    showLoadingState(); 
 
     try {
-        // Kita tambahkan parameter 'action' dan 'id' ke doGet
         const url = `${LINK_GAS}?action=get_session&id=${sessionId}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error("Gagal terhubung ke server.");
@@ -28,7 +24,6 @@ async function fetchSessionDataFromServer(sessionId) {
         }
 
         const session = result.data;
-        // Panggil fungsi render yang sama dengan summary.js
         renderShippingDetails(session);
         renderResiPhoto(session);
         renderChecklistPhotos(session);
@@ -44,7 +39,6 @@ function showLoadingState() {
 }
 
 function showErrorPage(message = "Sesi dengan ID yang diberikan tidak dapat ditemukan.") {
-    // Sembunyikan semua konten normal
     document.querySelectorAll('main > .card, main > h5').forEach(el => el.classList.add('d-none'));
     
     const errorContainer = document.getElementById('summary-not-found');
@@ -52,7 +46,6 @@ function showErrorPage(message = "Sesi dengan ID yang diberikan tidak dapat dite
     errorContainer.querySelector('p').textContent = message;
 }
 
-// === FUNGSI RENDER (Bisa di-copy dari summary.js yang sudah di-update) ===
 
 function renderShippingDetails(session) {
     const container = document.getElementById('summary-shipping-details');

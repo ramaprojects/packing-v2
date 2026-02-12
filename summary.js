@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // loadAllSessions() sekarang mengambil data yang disinkronkan oleh history.js
     const allSessions = loadAllSessions(); 
     const session = allSessions.find(s => s.SessionID === sessionId);
 
@@ -24,9 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-/**
- * Diperbarui untuk menggunakan properti dari server (contoh: 'Penerima', 'Petugas')
- */
 function renderShippingDetails(session) {
     const container = document.getElementById('summary-shipping-details');
     if (!container) return;
@@ -53,9 +49,6 @@ function renderShippingDetails(session) {
     `;
 }
 
-/**
- * Diperbarui untuk menggunakan properti 'LinkFotoResi'
- */
 function renderResiPhoto(session) {
     const container = document.getElementById('summary-resi-photo');
     if (!container) return;
@@ -67,16 +60,12 @@ function renderResiPhoto(session) {
     }
 }
 
-/**
- * Diperbarui untuk membaca properti 'ChecklistData' yang merupakan array
- */
 function renderChecklistPhotos(session) {
     const container = document.getElementById('summary-checklist-container');
     if (!container) return;
 
     container.innerHTML = '';
     
-    // 'ChecklistData' sudah di-parse menjadi array oleh code.gs dan disimpan oleh history.js
     const checklist = session.ChecklistData || [];
 
     if (checklist.length === 0) {
@@ -103,15 +92,9 @@ function renderChecklistPhotos(session) {
     });
 }
 
-
-/**
- * Diperbarui untuk menggunakan querySelectorAll yang mengembalikan NodeList
- */
 function showErrorPage() {
-    // Gunakan querySelectorAll untuk mendapatkan SEMUA elemen yang cocok
     document.querySelectorAll('main > .card, main > h5').forEach(el => el.classList.add('d-none'));
     
-    // Sembunyikan juga tombol WhatsApp jika ada
     const waButton = document.getElementById('btn-send-whatsapp');
     if (waButton) waButton.classList.add('d-none');
     
