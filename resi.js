@@ -7,7 +7,7 @@
 async function syncSessionToServer(session) {
     try {
         // Pastikan LINK_GAS tersedia (diasumsikan dari app.js atau didefinisikan secara global)
-        const url = 'https://script.google.com/macros/s/AKfycbzOG14sXeZYe50c7IBgleSUHfe5SYt38NfSVhvtoTlrTkORFdv23LU99oPiZERSOoHS/exec' + '?type=sync_session';
+        const url = LINK_GAS + '?type=sync_session';
 
         const response = await fetch(url, {
             method: 'POST',

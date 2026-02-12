@@ -14,9 +14,9 @@ async function fetchAndRenderHistory() {
 
     try {
         // Asumsi LINK_GAS didefinisikan di app.js
-        const response = await fetch('https://script.google.com/macros/s/AKfycbzOG14sXeZYe50c7IBgleSUHfe5SYt38NfSVhvtoTlrTkORFdv23LU99oPiZERSOoHS/exec'); 
+        const response = await fetch(LINK_GAS);
         if (!response.ok) throw new Error(`Server Error: ${response.statusText}`);
-        
+
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
 
@@ -55,7 +55,7 @@ function renderHistory(list = historyCache) {
         // Sesuaikan pesan berdasarkan apakah ini hasil pencarian atau tidak
         const isSearching = document.getElementById('historySearch').value !== '';
         emptyView.querySelector('h5').textContent = isSearching ? 'Tidak Ditemukan' : 'Belum Ada Riwayat';
-        emptyView.querySelector('p').textContent = isSearching 
+        emptyView.querySelector('p').textContent = isSearching
             ? 'Tidak ada riwayat yang cocok dengan pencarian Anda.'
             : 'Mulai sesi packing baru untuk melihat riwayat di sini.';
         return;
@@ -68,9 +68,9 @@ function renderHistory(list = historyCache) {
 
     // 2. Kelompokkan sesi berdasarkan tanggal (inti dari perubahan)
     const groupedByDate = list.reduce((acc, session) => {
-        const groupDate = session.WaktuSelesai || session.WaktuDibuat; 
+        const groupDate = session.WaktuSelesai || session.WaktuDibuat;
         const dateKey = new Date(groupDate).toISOString().split('T')[0];
-        
+
         if (!acc[dateKey]) acc[dateKey] = [];
         acc[dateKey].push(session);
         return acc;
@@ -110,20 +110,31 @@ function renderHistory(list = historyCache) {
 }
 
 // === FUNGSI BARU: Membuat kartu sesi yang lebih ringkas ===
+// Di file history.js
+
 function createSessionCard(session) {
-    // --- PERUBAHAN: Menyesuaikan dengan format data dari server ---
-    const badge = getStatusBadgeDetails(session.Status); 
+    const badge = getStatusBadgeDetails(session.Status);
+
+    // Kita tidak lagi menggunakan <a> sebagai elemen utama, tapi div
     return `
-        <a href="summary.html?sessionId=${session.SessionID}" class="list-group-item list-group-item-action">
-            <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1 text-truncate fw-semibold">${session.Penerima}</h6>
-                <small class="text-muted">${new Date(session.WaktuDibuat).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</small>
+        <div class="swipe-container list-group-item list-group-item-action p-0">
+            <div class="swipe-actions">
+                <button class="swipe-delete-button" data-session-id="${session.SessionID}">
+                    <i class="bi bi-trash-fill"></i>
+                </button>
             </div>
-            <small class="mb-1 d-block text-muted">${session.JenisBarang} - ${session.Platform}</small>
-            <span class="badge ${badge.className}">${badge.label}</span>
-        </a>
+            <div class="swipe-card p-3" data-session-id="${session.SessionID}" data-href="summary.html?sessionId=${session.SessionID}">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1 text-truncate fw-semibold">${session.Penerima}</h6>
+                    <small class="text-muted">${new Date(session.WaktuDibuat).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</small>
+                </div>
+                <small class="mb-1 d-block text-muted">${session.JenisBarang} - ${session.Platform}</small>
+                <span class="badge ${badge.className}">${badge.label}</span>
+            </div>
+        </div>
     `;
 }
+
 
 // Di dalam file: history.js (di luar fungsi lain)
 
@@ -134,17 +145,23 @@ function createSessionCard(session) {
  * @returns {string} - Pesan teks yang diformat.
  */
 function createBulkWhatsAppMessage(sessions, dateKey) {
-    // ... (Fungsi ini juga perlu di-update)
-    const formattedDate = new Date(dateKey).toLocaleDateString('id-ID', { /* ... */ });
-    let message = `*Laporan Harian Packing - ${formattedDate}*\n*Total Sesi:* ${sessions.length}\n\n`;
+    const formattedDate = new Date(dateKey).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    let message = `*Laporan Harian Packing - ${formattedDate}*\n`;
+    message += `*Total Sesi:* ${sessions.length}\n\n`;
 
     sessions.forEach((session, index) => {
         message += `*Sesi ${index + 1}: ${session.Penerima}*\n`;
         message += `- Resi: ${session.NomorResi || 'Belum diisi'}\n`;
         message += `- Petugas: ${session.Petugas || '-'}\n`;
-        const summaryUrl = `${window.location.origin}${window.location.pathname.replace('history.html', '')}summary.html?sessionId=${session.SessionID}`;
+
+        // --- PERBAIKAN UTAMA ADA DI SINI ---
+        // Ganti 'summary.html' menjadi 'public-summary.html'
+        const summaryUrl = `${window.location.origin}${window.location.pathname.replace('history.html', '')}public-summary.html?sessionId=${session.SessionID}`;
+        // --- AKHIR PERBAIKAN ---
+        
         message += `- Detail & Foto: ${summaryUrl}\n\n`;
     });
+
     return message;
 }
 
@@ -170,7 +187,7 @@ function handleBulkSendToWhatsApp(dateKey) {
     if (phone.startsWith('0')) {
         phone = '62' + phone.substring(1);
     }
-    
+
     // 3. Buat pesan massal dan lakukan encoding
     const message = createBulkWhatsAppMessage(sessionsOnDate, dateKey);
     const encodedMessage = encodeURIComponent(message);
@@ -180,11 +197,130 @@ function handleBulkSendToWhatsApp(dateKey) {
     window.open(whatsappUrl, '_blank');
 }
 
+// --- TAMBAHKAN FUNGSI BARU INI ---
+/**
+ * Menangani proses penghapusan sesi di server dan UI.
+ * @param {string} sessionId - ID sesi yang akan dihapus.
+ * @param {HTMLElement} cardElement - Elemen kartu yang akan dihapus dari DOM.
+ */
+async function handleDeleteSession(sessionId, cardElement) {
+    // Tampilkan konfirmasi
+    if (!confirm(`Anda yakin ingin menghapus sesi untuk "${cardElement.querySelector('h6').textContent}"? Tindakan ini tidak bisa dibatalkan.`)) {
+        return;
+    }
+
+    // Tampilkan loading atau status visual
+    cardElement.style.opacity = '0.5';
+
+    try {
+        const url = `${LINK_GAS}?type=delete_session&sessionId=${sessionId}`;
+        const response = await fetch(url, { method: 'POST' }); // Kirim sebagai POST
+        const result = await response.json();
+
+        if (result.status !== 'success') {
+            throw new Error(result.message);
+        }
+
+        // Hapus dari UI dengan animasi
+        cardElement.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        cardElement.style.transform = 'translateX(-100%)';
+        cardElement.style.opacity = '0';
+
+        setTimeout(() => {
+            cardElement.closest('.accordion-item').remove(); // Hapus seluruh item jika ini item terakhir
+            // Atau cukup hapus kartu jika ada item lain
+            // cardElement.remove();
+
+            // Hapus dari cache lokal
+            historyCache = historyCache.filter(s => s.SessionID !== sessionId);
+            // Perbarui UI lain jika perlu (misal, jumlah sesi)
+        }, 300);
+
+    } catch (error) {
+        alert(`Gagal menghapus sesi: ${error.message}`);
+        cardElement.style.opacity = '1';
+    }
+}
+
 // === DOMContentLoaded: Menggunakan struktur Anda yang sudah ada ===
 document.addEventListener('DOMContentLoaded', () => {
     fetchAndRenderHistory();
 
-const search = document.getElementById('historySearch');
+    const container = document.getElementById('history-list');
+    let activeCard = null;
+    let startX = 0;
+    let currentX = 0;
+    let isSwiping = false;
+
+    // --- LOGIKA SWIPE DIMULAI ---
+    container.addEventListener('touchstart', e => {
+        const card = e.target.closest('.swipe-card');
+        if (!card) return;
+
+        activeCard = card;
+        startX = e.touches[0].clientX;
+        activeCard.style.transition = 'none'; // Matikan transisi saat swipe
+    }, { passive: true });
+
+    container.addEventListener('touchmove', e => {
+        if (!activeCard) return;
+
+        currentX = e.touches[0].clientX;
+        const diff = currentX - startX;
+
+        // Hanya swipe ke kiri dan jangan melebihi batas
+        if (diff < 0 && diff > -85) {
+            isSwiping = true;
+            activeCard.style.transform = `translateX(${diff}px)`;
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchend', e => {
+        if (!activeCard || !isSwiping) return;
+
+        const diff = currentX - startX;
+        activeCard.style.transition = 'transform 0.3s ease';
+
+        // Jika swipe cukup jauh, snap ke posisi terbuka
+        if (diff < -40) {
+            activeCard.style.transform = 'translateX(-80px)';
+        } else { // Jika tidak, kembalikan ke posisi semula
+            activeCard.style.transform = 'translateX(0)';
+        }
+
+        // Reset state
+        isSwiping = false;
+        activeCard = null;
+    }, { passive: true });
+    // --- LOGIKA SWIPE SELESAI ---
+
+    // --- LOGIKA KLIK (Hapus & Navigasi) ---
+    container.addEventListener('click', e => {
+        const deleteButton = e.target.closest('.swipe-delete-button');
+        const card = e.target.closest('.swipe-card');
+
+        // Jika tombol hapus diklik
+        if (deleteButton) {
+            const sessionId = deleteButton.dataset.sessionId;
+            const cardContainer = deleteButton.closest('.swipe-container');
+            handleDeleteSession(sessionId, cardContainer);
+            return;
+        }
+
+        // Jika kartu itu sendiri diklik (dan tidak sedang swipe)
+        if (card && !isSwiping) {
+            const cardTransform = window.getComputedStyle(card).transform;
+            // Hanya navigasi jika kartu tidak dalam posisi terbuka
+            if (cardTransform === 'none' || cardTransform === 'matrix(1, 0, 0, 1, 0, 0)') {
+                window.location.href = card.dataset.href;
+            } else {
+                // Jika kartu terbuka, klik akan menutupnya kembali
+                card.style.transform = 'translateX(0)';
+            }
+        }
+    });
+
+    const search = document.getElementById('historySearch');
     search.addEventListener('input', e => {
         const q = e.target.value.toLowerCase();
         // --- PERUBAHAN: Menyesuaikan dengan format data dari server ---
@@ -196,8 +332,6 @@ const search = document.getElementById('historySearch');
         renderHistory(filtered);
     });
 
-
-    const container = document.getElementById('history-list');
     container.addEventListener('click', (e) => {
         // Cari tombol WhatsApp terdekat yang di-klik
         const whatsappButton = e.target.closest('.btn-send-group-whatsapp');

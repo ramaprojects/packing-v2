@@ -4,6 +4,7 @@
 const STORAGE_KEY = 'packing_sessions';
 const CURRENT_SESSION_KEY = 'current_session';
 const LAST_OPERATOR_KEY = 'last_operator_name';
+const LINK_GAS = 'https://script.google.com/macros/s/AKfycbyIMYdILWBgxTJ0PLteqWAEl0-zo2WSz8xZSu3Z9wxtv2vp6b5g2UoTwDFUJ30r2f9b/exec'
 let currentSessionId = null;
 let isFinishingProcess = false;
 let fileBuffer = {};
@@ -21,9 +22,7 @@ function now() {
 
 function formatDate(isoString) {
     if (!isoString) return '-';
-
     const d = new Date(isoString);
-
     return d.toLocaleDateString('id-ID', {
         day: '2-digit',
         month: 'short',
@@ -33,9 +32,7 @@ function formatDate(isoString) {
 
 function formatDateTime(isoString) {
     if (!isoString) return '-';
-
     const d = new Date(isoString);
-
     return d.toLocaleString('id-ID', {
         day: '2-digit',
         month: 'short',
@@ -65,7 +62,6 @@ function getStatusBadgeDetails(status) {
         }
     };
 
-    // Default jika status tidak dikenali
     const defaultDetails = {
         label: status,
         className: 'bg-light text-dark'
@@ -78,20 +74,16 @@ async function compressImage(file, maxWidth = 1280, quality = 0.7) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         const reader = new FileReader();
-
         reader.onload = e => {
             img.src = e.target.result;
         };
-
         img.onload = () => {
             const scale = Math.min(1, maxWidth / img.width);
             const canvas = document.createElement('canvas');
             canvas.width = img.width * scale;
             canvas.height = img.height * scale;
-
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
             canvas.toBlob(
                 blob => {
                     if (!blob) reject('Compress failed');
@@ -117,9 +109,7 @@ function countPendingResi() {
 function updateResiBadge() {
     const badge = document.getElementById('resi-badge');
     if (!badge) return;
-
     const count = countPendingResi();
-
     if (count > 0) {
         badge.textContent = count;
         badge.classList.remove('d-none');
@@ -131,7 +121,6 @@ function updateResiBadge() {
 function updateResiNavBadge() {
     const badge = document.getElementById('resi-badge-nav');
     if (!badge) return;
-
     const count = countPendingResi();
     badge.textContent = count;
     badge.classList.toggle('d-none', count === 0);
@@ -186,7 +175,6 @@ function createNewSession(shipping) {
         resi: { number: null, photoUrl: null },
         progress: 0,
         status: 'DRAFT',
-        // DRAFT | CHECKLIST_DONE | finished 
         createdAt: now(),
         updatedAt: now()
     };
@@ -195,7 +183,6 @@ function createNewSession(shipping) {
 function getStatusLabel(status) {
     return getStatusBadgeDetails(status).label;
 }
-
 
 /*********************************
  * 5. CHECKLIST GENERATOR
@@ -678,7 +665,7 @@ async function uploadPhoto({ sessionId, type, item, penerima, resiNumber, file }
         form.append('mimeType', compressedBlob.type);
         form.append('base64', base64);
 
-        const res = await fetch('https://script.google.com/macros/s/AKfycbzOG14sXeZYe50c7IBgleSUHfe5SYt38NfSVhvtoTlrTkORFdv23LU99oPiZERSOoHS/exec', {
+        const res = await fetch(LINK_GAS, {
             method: 'POST',
             body: form
         });

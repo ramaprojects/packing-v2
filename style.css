@@ -371,3 +371,37 @@ header {
     border-radius: calc(var(--radius) / 2);
     font-size: 0.9rem;
 }
+
+/* Tambahkan ini di bagian bawah file style.css Anda */
+
+.swipe-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.375rem; /* Sesuaikan dengan radius kartu Anda */
+}
+
+.swipe-card {
+  position: relative;
+  z-index: 2;
+  transition: transform 0.3s ease;
+  background-color: white; /* Penting agar tidak transparan */
+}
+
+.swipe-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+}
+
+.swipe-delete-button {
+  background-color: #dc3545; /* Warna merah */
+  color: white;
+  border: none;
+  height: 97%;
+  width: 80px; /* Lebar area tombol hapus */
+  font-size: 1.5rem;
+}
