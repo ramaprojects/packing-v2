@@ -10,6 +10,16 @@ document.addEventListener('DOMContentLoaded', () => {
     renderStats(allSessions);
     renderRecentActivity(allSessions);
     updateResiNavBadge();
+
+    const btnLogout = document.getElementById('btn-logout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            if (confirm('Anda yakin ingin logout?')) {
+                localStorage.removeItem('isLoggedIn');
+                window.location.href = 'login.html';
+            }
+        });
+    }
 });
 
 /**

@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard</title>
+    <script src="auth-guard.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -22,7 +23,7 @@
             <h5 class="mb-0">Selamat datang kembali!</h5>
             <small class="text-muted">Siap untuk mulai packing hari ini?</small>
         </div>
-        
+
         <div class="d-grid gap-2 mb-4">
             <a href="checklist.html" class="btn btn-primary btn-lg">
                 <i class="bi bi-plus-circle-fill me-2"></i>Mulai Packing Baru
@@ -54,6 +55,10 @@
         </div>
     </main>
 
+    <div class="d-grid gap-2 mt-4">
+        <button id="btn-logout" class="btn btn-outline-danger">Logout</button>
+    </div>
+    
     <nav class="fixed-bottom bg-white border-top">
         <div class="d-flex bottom-nav justify-content-around py-2">
             <button class="nav-item active" data-nav="dashboard">
