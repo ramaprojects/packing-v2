@@ -15,8 +15,41 @@ async function fetchAndRenderHistory() {
         if (!response.ok) throw new Error(`Server Error: ${response.statusText}`);
 
         const result = await response.json();
-        if (result.status !== 'success') throw new Error(result.message);
-        saveAllSessions(result.data);
+if (result.status !== 'success') throw new Error(result.message);
+
+/* ===== MERGE SERVER + LOCAL (ANTI HILANG SESI RESI) ===== */
+const serverSessions = result.data;
+const localSessions = loadAllSessions() || [];
+
+// Buat map berdasarkan sessionId (server pakai SessionID)
+const localMap = new Map(
+    localSessions.map(s => [s.sessionId, s])
+);
+
+// Masukkan / update data dari server
+serverSessions.forEach(serverSession => {
+    const id = serverSession.SessionID;
+
+    if (localMap.has(id)) {
+        // Update status jadi SYNCED tapi jangan hapus field lokal lain
+        localMap.set(id, {
+            ...localMap.get(id),
+            status: 'SYNCED'
+        });
+    } else {
+        // Tambahkan sesi dari server jika belum ada di lokal
+        localMap.set(id, {
+            sessionId: id,
+            status: 'SYNCED',
+            ...serverSession
+        });
+    }
+});
+
+// Simpan hasil merge
+saveAllSessions(Array.from(localMap.values()));
+/* ===== END MERGE ===== */
+
 
         historyCache = result.data.sort((a, b) => {
             const dateA = a.WaktuSelesai || a.WaktuDibuat;
