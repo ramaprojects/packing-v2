@@ -4,7 +4,7 @@
 const STORAGE_KEY = 'packing_sessions';
 const CURRENT_SESSION_KEY = 'current_session';
 const LAST_OPERATOR_KEY = 'last_operator_name';
-const LINK_GAS = 'https://script.google.com/macros/s/AKfycbyRwAXplek-fEjUKUg3b7KjCpDtAy8YBik2ah32ZewQpa_PaBd7aQW2a4LJvzN7XL7o/exec'
+const LINK_GAS = 'https://script.google.com/macros/s/AKfycbyYBeQTh9s42llNfpTFqJxjQKxyKWmrF51VWbGPIX46D6P7UmFTMgnoPMYvXcMb96rv/exec'
 let currentSessionId = null;
 let isFinishingProcess = false;
 let fileBuffer = {};
@@ -697,6 +697,7 @@ function fileToBase64(file) {
 
 updateResiBadge();
 updateResiNavBadge();
+
 
 
 
