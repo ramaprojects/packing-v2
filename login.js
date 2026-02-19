@@ -11,7 +11,7 @@ async function handleLogin() {
     errorMessage.classList.add('d-none');
 
     try {
-        const url = `https://script.google.com/macros/s/AKfycbzeH8L2iOUU6mLThF84giiuQp0KetyCW6D8i_iFyh11MYGr7KAFBR0HJyCXv8OsmhOW/exec?type=login&password=${encodeURIComponent(enteredPassword)}`;
+        const url = `https://script.google.com/macros/s/AKfycbyYBeQTh9s42llNfpTFqJxjQKxyKWmrF51VWbGPIX46D6P7UmFTMgnoPMYvXcMb96rv/exec?type=login&password=${encodeURIComponent(enteredPassword)}`;
         
         const response = await fetch(url, { method: 'POST' });
         const result = await response.json();
@@ -38,3 +38,4 @@ passwordInput.addEventListener('keyup', (event) => {
         handleLogin();
     }
 });
+
